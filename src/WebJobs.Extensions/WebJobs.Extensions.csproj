@@ -98,6 +98,9 @@
     <Compile Include="Extensions\Core\ExecutionContextBindingProvider.cs" />
     <Compile Include="Extensions\Files\Bindings\FileBinding.cs" />
     <Compile Include="Extensions\Files\Bindings\FileTriggerBinding.cs" />
+    <Compile Include="Extensions\Monitoring\Bindings\ErrorTriggerAttributeBindingProvider.cs" />
+    <Compile Include="Extensions\Monitoring\ErrorTriggerAttribute.cs" />
+    <Compile Include="Extensions\Monitoring\Listener\ErrorTriggerListener.cs" />
     <Compile Include="Extensions\Monitoring\SlidingWindowTraceFilter.cs" />
     <Compile Include="Extensions\Monitoring\TraceFilter.cs" />
     <Compile Include="Extensions\Monitoring\TraceMonitor.cs" />

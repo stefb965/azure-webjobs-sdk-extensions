@@ -15,8 +15,8 @@ namespace Microsoft.Azure.WebJobs.Extensions
     /// </summary>
     public class TraceMonitor : TraceWriter
     {
-        private TimeSpan? _subscriptionThrottle = null;
         private DateTime _lastNotification;
+        private Exception _lastException;
 
         /// <summary>
         /// Constructs a new instance.
@@ -41,9 +41,28 @@ namespace Microsoft.Azure.WebJobs.Extensions
         /// </summary>
         internal Collection<Action<TraceFilter>> Subscriptions { get; private set; }
 
+        internal TimeSpan? NotificationThrottle { get; private set; }
+
         /// <inheritdoc/>
         public override void Trace(TraceEvent traceEvent)
         {
+            if (traceEvent == null)
+            {
+                throw new ArgumentNullException("traceEvent");
+            }
+
+            if (traceEvent.Exception != null)
+            {
+                // often we may see multiple sequential error messages for the same
+                // exception, so we want to skip the duplicates
+                bool isDuplicate = Object.ReferenceEquals(_lastException, traceEvent.Exception);
+                _lastException = traceEvent.Exception;
+                if (isDuplicate)
+                {
+                    return;
+                }
+            }
+
             foreach (TraceFilter filter in Filters)
             {
                 // trace must be passed to all filters to allow them to
@@ -63,8 +82,8 @@ namespace Microsoft.Azure.WebJobs.Extensions
         protected virtual void Notify(TraceFilter filter)
         {
             // Throttle notifications if requested
-            bool shouldNotify = _subscriptionThrottle == null ||
-                (DateTime.UtcNow - _lastNotification) > _subscriptionThrottle;
+            bool shouldNotify = NotificationThrottle == null ||
+                (DateTime.UtcNow - _lastNotification) > NotificationThrottle;
 
             if (shouldNotify)
             {
@@ -143,7 +162,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
         /// <returns>This <see cref="TraceMonitor"/> instance.</returns>
         public TraceMonitor Throttle(TimeSpan throttle)
         {
-            _subscriptionThrottle = throttle;
+            NotificationThrottle = throttle;
 
             return this;
         }
