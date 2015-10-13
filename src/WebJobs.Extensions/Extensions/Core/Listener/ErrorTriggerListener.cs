@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Threading;
@@ -10,7 +11,7 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 
-namespace Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener
+namespace Microsoft.Azure.WebJobs.Extensions.Core.Listener
 {
     internal class ErrorTriggerListener : IListener
     {
@@ -18,11 +19,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener
         private readonly JobHostConfiguration _config;
         private readonly TraceMonitor _traceMonitor;
 
+        static ErrorTriggerListener()
+        {
+            ErrorHandlers = new HashSet<string>();
+        }
+
         public ErrorTriggerListener(JobHostConfiguration config, ParameterInfo parameter, ITriggeredFunctionExecutor executor)
         {
             _config = config;
             _traceMonitor = CreateTraceMonitor(parameter, executor);
         }
+
+        /// <summary>
+        /// Gets the collection of full method names of all error handler functions
+        /// that have been bound to.
+        /// </summary>
+        internal static HashSet<string> ErrorHandlers { get; private set; }
 
         internal static TraceMonitor CreateTraceMonitor(ParameterInfo parameter, ITriggeredFunctionExecutor executor)
         {
@@ -51,6 +63,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener
                 }
             }
 
+            string errorHandlerFullName = string.Format("{0}.{1}", method.DeclaringType.FullName, method.Name);
+            ErrorHandlers.Add(errorHandlerFullName);
+
             message = message ?? attribute.Message;
 
             // Create the TraceFilter instance
@@ -76,7 +91,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener
             {
                 traceFilter = TraceFilter.Create(methodFilter, message);
             }
-            TraceMonitor traceMonitor = new TraceMonitor(System.Diagnostics.TraceLevel.Error).Filter(traceFilter);
+            TraceMonitor traceMonitor = new TraceMonitor().Filter(traceFilter);
 
             // Apply any additional monitor options
             if (!string.IsNullOrEmpty(attribute.Throttle))
@@ -85,7 +100,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener
                 traceMonitor.Throttle(throttle);
             }
 
-            // Subscribe the TraceFilter to the event stream
+            // Subscribe the error handler function to the error stream
             traceMonitor.Subscribe(p =>
             {
                 TriggeredFunctionData triggerData = new TriggeredFunctionData

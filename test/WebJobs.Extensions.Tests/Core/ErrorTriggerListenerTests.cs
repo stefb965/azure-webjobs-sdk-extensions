@@ -8,13 +8,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener;
+using Microsoft.Azure.WebJobs.Extensions.Core.Listener;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Moq;
 using Xunit;
 
-namespace Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring
+namespace Microsoft.Azure.WebJobs.Extensions.Tests.Core
 {
     public class ErrorTriggerListenerTests
     {
@@ -116,7 +116,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring
             // don't expect it to pass filter
             FunctionInvocationException functionException = new FunctionInvocationException("Function failed", new Exception("Kaboom!"))
             {
-                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring.ErrorTriggerListenerTests+Functions.Foo"
+                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Core.ErrorTriggerListenerTests+Functions.Foo"
             };
             TraceEvent traceEvent = new TraceEvent(TraceLevel.Error, "Kaboom!", null, functionException);
             traceMonitor.Trace(traceEvent);
@@ -124,7 +124,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring
 
             functionException = new FunctionInvocationException("Function failed", new Exception("Kaboom!"))
             {
-                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring.ErrorTriggerListenerTests+Functions.Test"
+                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Core.ErrorTriggerListenerTests+Functions.Test"
             };
             traceEvent = new TraceEvent(TraceLevel.Error, "Kaboom!", null, functionException);
             traceMonitor.Trace(traceEvent);
@@ -159,7 +159,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring
             // don't expect it to pass filter
             FunctionInvocationException functionException = new FunctionInvocationException("Function failed", new Exception("Kaboom!"))
             {
-                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring.ErrorTriggerListenerTests+Functions.Foo"
+                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Core.ErrorTriggerListenerTests+Functions.Foo"
             };
             TraceEvent traceEvent = new TraceEvent(TraceLevel.Error, "Kaboom!", null, functionException);
             traceMonitor.Trace(traceEvent);
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring
 
             functionException = new FunctionInvocationException("Function failed", new Exception("Kaboom!"))
             {
-                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Monitoring.ErrorTriggerListenerTests+Functions.Test2"
+                MethodName = "Microsoft.Azure.WebJobs.Extensions.Tests.Core.ErrorTriggerListenerTests+Functions.Test2"
             };
             traceEvent = new TraceEvent(TraceLevel.Error, "Kaboom!", null, functionException);
             traceMonitor.Trace(traceEvent);

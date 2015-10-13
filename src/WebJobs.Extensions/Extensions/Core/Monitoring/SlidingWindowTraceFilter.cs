@@ -40,7 +40,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
         }
 
         /// <summary>
-        /// Gets the notification message that should be used in notifications.
+        /// Gets the message that should be used in notifications.
         /// </summary>
         public override string Message
         {
@@ -73,7 +73,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
                 // fire on errors/warnings, and those events will be rare in normal processing.
                 lock (_syncLock)
                 {
-                    ResizeWindow();
+                    RemoveOldEvents(DateTime.UtcNow);
 
                     _traces.Add(traceEvent);
 
@@ -110,26 +110,17 @@ namespace Microsoft.Azure.WebJobs.Extensions
             return passesFilter;
         }
 
-        private void ResizeWindow()
+        internal void RemoveOldEvents(DateTime now)
         {
             // remove any events outside of the window
-            int count = 0;
-            DateTime cutoff = DateTime.UtcNow - _window;
-            foreach (TraceEvent currTraceEvent in _traces)
+            DateTime cutoff = now - _window;
+            while (_traces.Count > 0)
             {
-                if (currTraceEvent.Timestamp > cutoff)
+                if (_traces[0].Timestamp > cutoff)
                 {
                     break;
                 }
-                count++;
-            }
-
-            if (count > 0)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    _traces.RemoveAt(i);
-                }
+                _traces.RemoveAt(0);
             }
         }
     }

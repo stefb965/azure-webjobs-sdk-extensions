@@ -70,9 +70,9 @@ namespace ExtensionsSample
         /// </summary>
         private static void ConfigureTraceMonitor(JobHostConfiguration config, SendGridConfiguration sendGridConfiguration)
         {
-            var notifier = new TraceNotifier(sendGridConfiguration);
+            var notifier = new ErrorNotifier(sendGridConfiguration);
 
-            var traceMonitor = new TraceMonitor(TraceLevel.Error)
+            var traceMonitor = new TraceMonitor()
                 .Filter(new SlidingWindowTraceFilter(TimeSpan.FromMinutes(5), 3))
                 .Filter(p =>
                 {

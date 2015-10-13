@@ -21,6 +21,8 @@ namespace Microsoft.Azure.WebJobs.Extensions
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class ErrorTriggerAttribute : Attribute
     {
+        private string _throttle;
+
         /// <summary>
         /// Indicates that the error handler should be called on every error.
         /// </summary>
@@ -37,6 +39,15 @@ namespace Microsoft.Azure.WebJobs.Extensions
         /// <param name="threshold"></param>
         public ErrorTriggerAttribute(string window, int threshold)
         {
+            TimeSpan timeSpan;
+            if (!TimeSpan.TryParse(window, out timeSpan))
+            {
+                throw new ArgumentException("Invalid TimeSpan value specified.", "window");
+            }
+            if (threshold < 0)
+            {
+                throw new ArgumentOutOfRangeException("threshold");
+            }
             Window = window;
             Threshold = threshold;
         }
@@ -48,6 +59,10 @@ namespace Microsoft.Azure.WebJobs.Extensions
         /// <param name="filterType"></param>
         public ErrorTriggerAttribute(Type filterType)
         {
+            if (filterType == null)
+            {
+                throw new ArgumentNullException("filterType");
+            }
             FilterType = filterType;
         }
 
@@ -72,7 +87,22 @@ namespace Microsoft.Azure.WebJobs.Extensions
         /// Gets the notification throttle window. The function will be triggered at most once
        /// within this window. Should be expressed as a <see cref="TimeSpan"/> value (e.g. "00:30:00").
         /// </summary>
-        public string Throttle { get; set; }
+        public string Throttle
+        {
+            get
+            {
+                return _throttle;
+            }
+            set
+            {
+                TimeSpan timeSpan;
+                if (!TimeSpan.TryParse(value, out timeSpan))
+                {
+                    throw new ArgumentException("Invalid TimeSpan value specified.", "value");
+                }
+                _throttle = value;
+            }
+        }
 
         /// <summary>
         /// Gets the error message that should be used for notifications.

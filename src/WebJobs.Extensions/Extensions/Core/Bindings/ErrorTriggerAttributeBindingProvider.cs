@@ -7,15 +7,15 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Extensions.Core.Listener;
 using Microsoft.Azure.WebJobs.Extensions.Framework;
-using Microsoft.Azure.WebJobs.Extensions.Monitoring.Listener;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 
-namespace Microsoft.Azure.WebJobs.Extensions
+namespace Microsoft.Azure.WebJobs.Extensions.Core
 {
     internal class ErrorTriggerAttributeBindingProvider : ITriggerBindingProvider
     {
@@ -76,12 +76,16 @@ namespace Microsoft.Azure.WebJobs.Extensions
 
             public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
             {
-                // TODO: Perform any required conversions on the value
-                // E.g. convert from Dashboard invoke string to our trigger
-                // value type
-                TraceFilter triggerValue = value as TraceFilter;
+                if (value != null && value.GetType() == typeof(string))
+                {
+                    throw new NotSupportedException("ErrorTrigger does not support Dashboard invocation.");
+                }
+
+                TraceFilter triggerValue = (TraceFilter)value;
                 IValueBinder valueBinder = new ErrorValueBinder(_parameter, triggerValue);
-                return Task.FromResult<ITriggerData>(new TriggerData(valueBinder, GetBindingData(triggerValue)));
+                TriggerData triggerData = new TriggerData(valueBinder, GetBindingData(triggerValue));
+
+                return Task.FromResult<ITriggerData>(triggerData);
             }
 
             public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
@@ -101,10 +105,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
                     Name = _parameter.Name,
                     DisplayHints = new ParameterDisplayHints
                     {
-                        // TODO: Customize your Dashboard display strings
-                        Prompt = "Sample",
-                        Description = "Sample trigger fired",
-                        DefaultValue = "Sample"
+                        Prompt = "Error Info"
                     }
                 };
             }
@@ -112,9 +113,8 @@ namespace Microsoft.Azure.WebJobs.Extensions
             private IReadOnlyDictionary<string, object> GetBindingData(TraceFilter value)
             {
                 Dictionary<string, object> bindingData = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-                bindingData.Add("SampleTrigger", value);
-
-                // TODO: Add any additional binding data
+                bindingData.Add("ErrorTrigger", value);
+                bindingData.Add("Message", value.Message);
 
                 return bindingData;
             }
@@ -124,8 +124,6 @@ namespace Microsoft.Azure.WebJobs.Extensions
                 Dictionary<string, Type> contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
                 contract.Add("Message", typeof(string));
 
-                // TODO: Add any additional binding contract members
-
                 return contract;
             }
 
@@ -133,8 +131,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
             {
                 public override string GetTriggerReason(IDictionary<string, string> arguments)
                 {
-                    // TODO: Customize your Dashboard display string
-                    return string.Format("Sample trigger fired at {0}", DateTime.UtcNow.ToString("o"));
+                    return string.Format("Error trigger fired");
                 }
             }
 

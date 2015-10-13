@@ -27,11 +27,12 @@ namespace ExtensionsSample
             log.WriteLine(string.Format("Processed input file '{0}'!", name));
         }
 
-        public static void ImportFileErrorHandler([ErrorTrigger] TraceEvent error, TextWriter log)
+        public static void ImportFileErrorHandler(
+            [ErrorTrigger] TraceEvent error, string message, TextWriter log)
         {
             // Here you would send an error notification
 
-            log.WriteLine(string.Format("ImportFile failed with error: {0}", error.ToString()));
+            log.WriteLine(string.Format("{0} : {1}", message, error.ToString()));
         }
 
         // When files are created or modified in the "cache" directory, this job will be triggered.
